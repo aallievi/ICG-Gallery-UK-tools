@@ -1,0 +1,88 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     @default(TEAM_MEMBER)
+  createdAt DateTime @default(now())
+  movements Movement[]
+}
+
+enum Role {
+  ADMIN
+  TEAM_MEMBER
+  VIEWER
+}
+
+model Brand {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  color       String       @default("#b8936a")
+  collections Collection[]
+}
+
+model Collection {
+  id        String    @id @default(cuid())
+  name      String
+  brandId   String
+  brand     Brand     @relation(fields: [brandId], references: [id])
+  finishes  String[]
+  thickness Int[]
+  products  Product[]
+  @@unique([name, brandId])
+}
+
+model Product {
+  id           String     @id @default(cuid())
+  color        String
+  collectionId String
+  collection   Collection @relation(fields: [collectionId], references: [id])
+  stock        Int        @default(5)
+  movements    Movement[]
+  @@unique([color, collectionId])
+}
+
+model Client {
+  id         String     @id @default(cuid())
+  name       String     @unique
+  type       String?
+  movements  Movement[]
+}
+
+model Movement {
+  id           String   @id @default(cuid())
+  date         DateTime @default(now())
+  productId    String
+  product      Product  @relation(fields: [productId], references: [id])
+  finish       String
+  thickness    Int
+  qty          Int
+  clientId     String
+  client       Client   @relation(fields: [clientId], references: [id])
+  project      String?
+  delivery     String?
+  status       Status
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  deliveryCost Float    @default(0)
+  notes        String?
+  createdAt    DateTime @default(now())
+}
+
+enum Status {
+  DELIVERED
+  SENT
+  RETURNED
+  LOST
+  TO_REORDER
+  IN_SHOWROOM
+}
