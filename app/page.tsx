@@ -685,10 +685,13 @@ export default function App() {
     movements: <Movements movs={movs} brands={brands} reload={loadAll} userRole={user.role} />,
     catalog: <Catalog brands={brands} />,
     stock: <StockPage stock={stock} reload={loadAll} />,
-    clients: <Clients movs={movs} />,transport: <TransportCalculator />,
+    clients: <Clients movs={movs} />,
+    transport: <TransportCalculator />,
     reports: <Reports movs={movs} />,
     users: <div style={{ padding: 40, textAlign: 'center', color: 'var(--mid)' }}>Gestione utenti — disponibile nella prossima versione.</div>,
-transport: 'Calcolatore Trasporto',  }
+  }
+
+  const titles: Record<string, string> = { dashboard: 'Dashboard', movements: 'Movimenti', catalog: 'Catalogo Brand', stock: 'Stock & Riordino', clients: 'Clienti & Studi', reports: 'Report & Analisi', users: 'Utenti', transport: 'Calcolatore Trasporto' } }
 
   const titles: Record<string, string> = { dashboard: 'Dashboard', movements: 'Movimenti', catalog: 'Catalogo Brand', stock: 'Stock & Riordino', clients: 'Clienti & Studi', reports: 'Report & Analisi', users: 'Utenti' }
 
