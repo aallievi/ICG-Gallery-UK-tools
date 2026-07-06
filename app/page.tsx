@@ -707,3 +707,149 @@ transport: 'Calcolatore Trasporto',  }
     </div>
   )
 }
+
+function TransportCalculator() {
+  const [pkg, setPkg] = useState('fb')
+  const [sqm, setSqm] = useState(100)
+  const [dogExp, setDogExp] = useState(false)
+  const [dogImp, setDogImp] = useState(false)
+
+  const LISTINO: Record<number,number> = {1:300,2:850,3:1135,4:1514,5:1750,6:2100,7:2289,8:2616,9:2592,10:2880,11:3687,12:3912,13:4240,14:4240}
+  const PKG: Record<string,any> = {
+    fb:      {label:'Full Body',sqmMtl:56,   pesoMtl:913.18,  colliMtl:1, sqmCollo:56,   pesoCollo:913.18, vincolo:'peso'},
+    '6060':  {label:'60×60',   sqmMtl:92.16, pesoMtl:1695.74, colliMtl:2, sqmCollo:46.08,pesoCollo:847.87, vincolo:'peso'},
+    '12060': {label:'120×60',  sqmMtl:86.40, pesoMtl:1589.76, colliMtl:2, sqmCollo:43.20,pesoCollo:794.88, vincolo:'peso'},
+    '120120':{label:'120×120', sqmMtl:80.64, pesoMtl:1491.04, colliMtl:2, sqmCollo:40.32,pesoCollo:745.52, vincolo:'peso'},
+    cassa300:{label:'Cassa 300×150',sqmMtl:54,pesoMtl:993.80, colliMtl:4, sqmCollo:54,   pesoCollo:993.80, vincolo:'geo'},
+    cassa150:{label:'Cassa 150×150',sqmMtl:81,pesoMtl:1342.50,colliMtl:3, sqmCollo:54,   pesoCollo:895,    vincolo:'geo'},
+  }
+
+  const p = PKG[pkg]
+  const dogTot = (dogExp ? 50 : 0) + (dogImp ? 65 : 0)
+  const colliNec = Math.ceil(sqm / p.sqmCollo)
+  const sqmTot = colliNec * p.sqmCollo
+  const pesoTot = colliNec * p.pesoCollo
+  const mtlRaw = sqm / p.sqmMtl
+  const mtlFat = Math.ceil(mtlRaw)
+  const getCosto = (mtl: number) => LISTINO[Math.min(Math.ceil(mtl), 14)] || 4240
+  const costoTrasporto = getCosto(mtlRaw)
+  const costoTotale = costoTrasporto + dogTot
+  const pmq = sqm > 0 ? costoTotale / sqm : 0
+  const fmt = (n: number, dec=2) => n.toLocaleString('it-IT',{minimumFractionDigits:dec,maximumFractionDigits:dec})
+
+  return (
+    <div style={{maxWidth:720}}>
+      <div style={{fontSize:18,fontWeight:700,marginBottom:4}}>Calcolatore Costo Trasporto</div>
+      <div style={{fontSize:12,color:'var(--mid)',marginBottom:24}}>Trasportatore: Alberti &amp; Santi · Limite peso: 1.750 kg/mtl · Max camion: 14 mtl lineari</div>
+
+      <div className="card" style={{marginBottom:16}}>
+        <div className="card-body">
+          <div style={{fontSize:11,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',color:'var(--acc)',marginBottom:12}}>① Packaging e quantità</div>
+          <div className="form-grid form-grid-2">
+            <div className="form-group" style={{gridColumn:'1/-1'}}>
+              <label className="form-label">Tipologia packaging</label>
+              <select className="form-control" value={pkg} onChange={e=>setPkg(e.target.value)}>
+                <option value="fb">Full Body — Europallet</option>
+                <option value="6060">Tradizionale 60×60 — Europallet</option>
+                <option value="12060">Tradizionale 120×60 — Europallet</option>
+                <option value="120120">Tradizionale 120×120 — Europallet</option>
+                <option value="cassa300">Cassa 300×150 (322×163×34h cm)</option>
+                <option value="cassa150">Cassa 150×150 (172×163×41h cm)</option>
+              </select>
+            </div>
+            <div className="form-group" style={{gridColumn:'1/-1'}}>
+              <label className="form-label">Metri quadri da spedire (sqm)</label>
+              <input className="form-control" type="number" value={sqm} min={1} onChange={e=>setSqm(Number(e.target.value)||1)}/>
+            </div>
+          </div>
+
+          <div style={{fontSize:11,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',color:'var(--acc)',margin:'16px 0 12px'}}>② Dogane</div>
+          <div style={{display:'flex',gap:20}}>
+            <label style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer',fontSize:13}}>
+              <input type="checkbox" checked={dogExp} onChange={e=>setDogExp(e.target.checked)} style={{width:16,height:16,accentColor:'var(--acc)'}}/>
+              Dogana Export (+€ 50)
+            </label>
+            <label style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer',fontSize:13}}>
+              <input type="checkbox" checked={dogImp} onChange={e=>setDogImp(e.target.checked)} style={{width:16,height:16,accentColor:'var(--acc)'}}/>
+              Dogana Import (+€ 65)
+            </label>
+          </div>
+
+          <div style={{height:1,background:'var(--bdr)',margin:'16px 0'}}/>
+
+          <div style={{fontSize:11,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',color:'var(--acc)',marginBottom:12}}>③ Parametri packaging</div>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8,marginBottom:12}}>
+            {[
+              {v:fmt(p.sqmMtl),l:'sqm / metro lineare'},
+              {v:fmt(p.pesoMtl),l:'kg / metro lineare'},
+              {v:String(p.colliMtl),l:'colli / metro lineare'},
+              {v:fmt(p.sqmCollo),l:'sqm / collo'},
+            ].map((s,i)=>(
+              <div key={i} style={{background:'var(--pale)',border:'1px solid var(--bdr)',borderRadius:8,padding:'10px 12px'}}>
+                <div style={{fontSize:18,fontWeight:700,color:'var(--stone)'}}>{s.v}</div>
+                <div style={{fontSize:11,color:'var(--mid)',marginTop:2}}>{s.l}</div>
+              </div>
+            ))}
+          </div>
+          <span style={{display:'inline-block',fontSize:11,padding:'3px 10px',borderRadius:20,fontWeight:600,background:p.vincolo==='peso'?'#fde8e3':'#e3f7ec',color:p.vincolo==='peso'?'#c0392b':'#1a7a40'}}>
+            {p.vincolo==='peso'?'⚠ Vincolo PESO':'✓ Vincolo geometrico'}
+          </span>
+        </div>
+      </div>
+
+      {/* Result */}
+      <div style={{background:'linear-gradient(135deg,#2c2825 0%,var(--acc) 100%)',borderRadius:12,padding:'20px 24px',color:'#fff',marginBottom:16}}>
+        <div style={{fontSize:11,opacity:.8,textTransform:'uppercase',letterSpacing:'.06em'}}>Costo totale trasporto</div>
+        <div style={{fontSize:38,fontWeight:700,margin:'4px 0 12px'}}>€ {fmt(costoTotale)}</div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
+          {[
+            {v:`€ ${fmt(pmq)}/mq`,l:'Costo al metro quadro'},
+            {v:`€ ${fmt(costoTrasporto)}`,l:'Solo trasporto'},
+            {v:`${mtlFat} mtl`,l:'Metri lineari'},
+            {v:dogTot>0?`€ ${fmt(dogTot)}`:'—',l:'Dogane'},
+          ].map((r,i)=>(
+            <div key={i} style={{background:'rgba(255,255,255,.12)',borderRadius:8,padding:'10px 12px'}}>
+              <div style={{fontSize:16,fontWeight:700}}>{r.v}</div>
+              <div style={{fontSize:11,opacity:.75,marginTop:2}}>{r.l}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {mtlRaw > 14 && (
+        <div style={{background:'#fff8e1',border:'1px solid #f9c74f',borderRadius:8,padding:'10px 14px',fontSize:13,color:'#7d5a00',marginBottom:16}}>
+          ⚠ Attenzione: i metri quadri inseriti richiedono più di un camion completo (14 mtl). Considera di suddividere la spedizione.
+        </div>
+      )}
+
+      {/* Breakdown */}
+      <div className="card">
+        <div className="card-body">
+          <div style={{fontSize:11,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',color:'var(--acc)',marginBottom:12}}>Dettaglio calcolo</div>
+          {[
+            {k:'Colli necessari',v:`${colliNec} × ${fmt(p.sqmCollo)} sqm`},
+            {k:'Sqm totali imballo',v:`${fmt(sqmTot)} sqm`},
+            {k:'Peso totale stimato',v:`${fmt(pesoTot)} kg`},
+            {k:'Metri lineari richiesti',v:`${fmt(mtlRaw)} mtl`},
+            {k:'Metri lineari fatturati',v:`${mtlFat} mtl (arrotondati)`},
+            {k:'Costo listino trasporto',v:`€ ${fmt(costoTrasporto)}`},
+            ...(dogTot>0?[{k:'Dogane',v:`€ ${fmt(dogTot)}`}]:[]),
+          ].map((r,i)=>(
+            <div key={i} style={{display:'flex',justifyContent:'space-between',padding:'6px 0',borderBottom:'1px solid #f0ebe5',fontSize:13}}>
+              <span style={{color:'var(--mid)'}}>{r.k}</span>
+              <span style={{fontWeight:600,color:'var(--stone)'}}>{r.v}</span>
+            </div>
+          ))}
+          <div style={{display:'flex',justifyContent:'space-between',padding:'10px 0 0',fontSize:15,fontWeight:700,borderTop:'2px solid var(--acc)',marginTop:4}}>
+            <span>Totale</span><span>€ {fmt(costoTotale)}</span>
+          </div>
+          <div style={{display:'flex',justifyContent:'space-between',padding:'4px 0',fontSize:14,fontWeight:700}}>
+            <span>Costo al mq</span><span>€ {fmt(pmq)}/mq</span>
+          </div>
+        </div>
+      </div>
+
+      <div style={{fontSize:11,color:'var(--mid)',textAlign:'center',marginTop:16}}>Calcolatore interno — listino Alberti &amp; Santi</div>
+    </div>
+  )
+}
