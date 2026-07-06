@@ -38,6 +38,7 @@ function Sidebar({ page, setPage, user }: { page: string; setPage: (p: string) =
     { id: 'stock', label: 'Stock & Riordino', icon: '◫' },
     { id: 'clients', label: 'Clienti', icon: '◎' },
     { id: 'reports', label: 'Report', icon: '▤' },
+{ id: 'transport', label: 'Trasporto', icon: '🚛' },
     ...(user?.role === 'ADMIN' ? [{ id: 'users', label: 'Utenti', icon: '◉' }] : []),
   ]
   return (
